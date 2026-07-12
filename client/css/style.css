@@ -1,0 +1,387 @@
+:root {
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --radius: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  overscroll-behavior: none;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 20px 16px 40px;
+  flex-direction: column;
+}
+.screen.active { display: flex; }
+
+.card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.center-content {
+  text-align: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+
+h1 { font-size: 26px; margin-bottom: 8px; }
+h2 { font-size: 21px; margin-bottom: 6px; }
+h3 { font-size: 17px; margin-bottom: 10px; color: var(--color-text); }
+
+.subtitle { color: var(--color-text-muted); font-size: 14px; margin-bottom: 16px; }
+.hint { color: var(--color-text-muted); font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+
+input[type="text"], input[type="password"], input[type="number"] {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 16px;
+  margin-bottom: 12px;
+  background: #fff;
+  color: var(--color-text);
+}
+input:focus { outline: none; border-color: var(--color-primary); }
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  margin-top: 10px;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; }
+
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-primary:active { background: var(--color-primary-dark); }
+.btn-primary:disabled { background: #94a3b8; }
+
+.btn-secondary {
+  width: 100%;
+  padding: 13px;
+  background: #eef2ff;
+  color: var(--color-primary);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.btn-text {
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 10px;
+  width: 100%;
+  text-align: center;
+}
+.btn-text-small { background: none; color: var(--color-text-muted); font-size: 13px; }
+
+.divider {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 16px 0;
+  position: relative;
+}
+
+.error-text { color: var(--color-danger); font-size: 13px; margin-top: -6px; margin-bottom: 10px; }
+
+/* ============ ADMIN ============ */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.tab-btn {
+  padding: 9px 14px;
+  background: #eef2ff;
+  color: var(--color-text-muted);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tab-btn.active { background: var(--color-primary); color: white; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.list-container { display: flex; flex-direction: column; gap: 8px; }
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.list-item.eliminated { opacity: 0.5; text-decoration: line-through; }
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.badge-seeker { background: #fef3c7; color: #92400e; }
+.badge-hider { background: #dbeafe; color: #1e40af; }
+.badge-eliminated { background: #fee2e2; color: #991b1b; }
+
+.map-container {
+  width: 100%;
+  height: 350px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+}
+.map-fullscreen {
+  height: calc(100vh - 90px);
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+.button-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.button-row button { flex: 1; margin-bottom: 0; }
+
+.selected-game-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #eef2ff;
+  border-radius: 8px;
+}
+
+.status-display {
+  margin-top: 14px;
+  padding: 12px;
+  background: #f0fdf4;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #166534;
+}
+
+/* ============ FASI DI GIOCO ============ */
+.phase-header {
+  text-align: center;
+  padding: 40px 20px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  color: white;
+}
+.hiding-header { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+
+.big-timer {
+  font-size: 56px;
+  font-weight: 800;
+  margin: 16px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.role-info { font-size: 16px; text-align: center; font-weight: 600; }
+
+.hunt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--color-card);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.hunt-timer {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-danger);
+}
+
+.wake-lock-indicator {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.wake-lock-indicator.active::before { content: "🔆 Schermo attivo"; }
+.wake-lock-indicator.inactive::before { content: "⚠️ Riapri l'app"; color: var(--color-warning); }
+
+/* Dashboard scorrevole sopra la mappa (vista cercatore) */
+.dashboard-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-card);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 18px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-border);
+}
+.dashboard-content {
+  padding: 12px 16px 16px;
+  overflow-y: auto;
+  display: none;
+}
+.dashboard-content.expanded { display: block; }
+
+.btn-capture-fab {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  color: white;
+  font-size: 24px;
+  box-shadow: 0 4px 14px rgba(220,38,38,0.4);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-fake-position-info {
+  margin-top: 14px;
+  padding: 12px;
+  background: #eff6ff;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.my-info-box {
+  padding: 12px;
+  background: #eef2ff;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* ============ FOTO ============ */
+.photo-card { display: flex; flex-direction: column; align-items: center; }
+#camera-preview, #photo-preview {
+  width: 100%;
+  border-radius: 12px;
+  margin: 14px 0;
+  background: #000;
+  max-height: 400px;
+  object-fit: cover;
+}
+#photo-buttons, #photo-confirm-buttons { width: 100%; display: flex; gap: 8px; }
+#photo-buttons button, #photo-confirm-buttons button { flex: 1; }
+
+/* ============ ANIMAZIONE IA ============ */
+.ai-thinking-animation {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 20px auto;
+}
+.ai-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--color-primary);
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+.ai-pulse.delay-1 { animation-delay: 0.6s; }
+.ai-pulse.delay-2 { animation-delay: 1.2s; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.4); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+/* ============ TOAST NOTIFICHE ============ */
+#toast-container {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--color-text);
+  color: white;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  animation: toast-in 0.25s ease-out;
+}
+.toast.toast-danger { background: var(--color-danger); }
+.toast.toast-success { background: var(--color-success); }
+
+@keyframes toast-in {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Leggibilità popup Leaflet coerente col resto dell'app */
+.leaflet-popup-content { font-family: inherit; font-size: 13px; }

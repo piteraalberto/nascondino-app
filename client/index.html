@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nascondino GPS</title>
+
+  <!-- Leaflet: mappa gratuita basata su OpenStreetMap, nessuna chiave API richiesta -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Routing Machine: per lo snap dei waypoint alle strade usando OSRM (gratuito) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       SCHERMATA: Home / ingresso
+  ============================================================ -->
+  <div id="screen-home" class="screen active">
+    <div class="card">
+      <h1>🙈 Nascondino GPS</h1>
+      <p class="subtitle">Inserisci il codice del round per unirti alla partita</p>
+      <input type="text" id="input-round-id" placeholder="Codice round (es. 12)" inputmode="numeric" />
+      <input type="text" id="input-nickname" placeholder="Il tuo nickname" maxlength="20" />
+      <button id="btn-join-round" class="btn-primary">Entra in partita</button>
+
+      <div class="divider">oppure</div>
+
+      <button id="btn-go-admin" class="btn-secondary">Sono l'organizzatore 🔑</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Sblocco Admin
+  ============================================================ -->
+  <div id="screen-admin-unlock" class="screen">
+    <div class="card">
+      <h1>🔑 Accesso organizzatore</h1>
+      <p class="subtitle">Inserisci il codice di sblocco per accedere alle impostazioni</p>
+      <input type="password" id="input-admin-code" placeholder="Codice di sblocco" inputmode="numeric" />
+      <button id="btn-unlock-admin" class="btn-primary">Sblocca</button>
+      <p id="admin-unlock-error" class="error-text"></p>
+      <button id="btn-back-home-1" class="btn-text">← Torna indietro</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Pannello Admin (impostazioni + gestione partita)
+  ============================================================ -->
+  <div id="screen-admin-panel" class="screen">
+    <div class="admin-header">
+      <h2>⚙️ Pannello Organizzatore</h2>
+      <button id="btn-admin-logout" class="btn-text-small">Esci</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab-games">Partite</button>
+      <button class="tab-btn" data-tab="tab-boundary">Confini mappa</button>
+      <button class="tab-btn" data-tab="tab-round">Gestione round</button>
+      <button class="tab-btn" data-tab="tab-photos">Foto da approvare</button>
+    </div>
+
+    <!-- TAB: Lista partite / crea nuova -->
+    <div id="tab-games" class="tab-content active">
+      <div class="card">
+        <h3>Crea nuova partita</h3>
+        <input type="text" id="input-new-game-name" placeholder="Nome partita (es. Nascondino al parco)" />
+        <button id="btn-create-game" class="btn-primary">Crea partita</button>
+      </div>
+      <div class="card">
+        <h3>Partite esistenti</h3>
+        <div id="games-list" class="list-container"></div>
+      </div>
+    </div>
+
+    <!-- TAB: Disegno confini -->
+    <div id="tab-boundary" class="tab-content">
+      <div class="card">
+        <h3>Confini area di gioco</h3>
+        <p class="hint">Seleziona una partita dalla tab "Partite" prima di modificare i confini. Clicca sulla mappa per aggiungere waypoint. I punti verranno agganciati automaticamente alle strade più vicine quando disegni il percorso.</p>
+        <div id="boundary-selected-game" class="selected-game-label"></div>
+        <div id="map-boundary" class="map-container"></div>
+        <div class="button-row">
+          <button id="btn-boundary-undo" class="btn-secondary">Annulla ultimo punto</button>
+          <button id="btn-boundary-clear" class="btn-secondary">Cancella tutto</button>
+          <button id="btn-boundary-save" class="btn-primary">Salva confini</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Gestione round (impostazioni, avvio, assegnazione ruoli) -->
+    <div id="tab-round" class="tab-content">
+      <div class="card">
+        <h3>Nuovo round</h3>
+        <div id="round-selected-game" class="selected-game-label"></div>
+
+        <label>Tempo per nascondersi (minuti)</label>
+        <input type="number" id="input-hide-time" value="10" min="1" />
+
+        <label>Tempo per cercare (minuti)</label>
+        <input type="number" id="input-hunt-time" value="30" min="1" />
+
+        <label>Raggio massimo offuscamento posizione (metri)</label>
+        <input type="number" id="input-max-radius" value="250" min="10" />
+
+        <label>Intervallo invio posizione (minuti)</label>
+        <input type="number" id="input-position-interval" value="3" min="1" />
+
+        <label>Distanza minima per cattura (metri)</label>
+        <input type="number" id="input-capture-distance" value="50" min="5" />
+
+        <button id="btn-create-round" class="btn-primary">Crea round e apri lobby</button>
+      </div>
+
+      <div class="card" id="round-management-card" style="display:none;">
+        <h3>Round attivo: <span id="active-round-id"></span></h3>
+        <p class="hint">Condividi questo codice round con i giocatori: <strong id="round-code-display"></strong></p>
+
+        <div id="lobby-players-list" class="list-container"></div>
+
+        <div class="button-row">
+          <button id="btn-assign-random" class="btn-secondary">🎲 Estrai ruoli casualmente</button>
+          <button id="btn-assign-manual" class="btn-secondary">✋ Assegna manualmente</button>
+        </div>
+
+        <div id="manual-assignment-panel" style="display:none;"></div>
+
+        <button id="btn-start-round" class="btn-primary">▶️ Avvia partita</button>
+
+        <div id="round-status-display" class="status-display"></div>
+      </div>
+    </div>
+
+    <!-- TAB: Approvazione foto -->
+    <div id="tab-photos" class="tab-content">
+      <div class="card">
+        <h3>Foto in attesa di approvazione</h3>
+        <p class="hint">Seleziona il round attivo dalla tab "Gestione round" per vedere qui le catture da validare.</p>
+        <div id="pending-captures-list" class="list-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Lobby (in attesa che l'admin avvii la partita)
+  ============================================================ -->
+  <div id="screen-lobby" class="screen">
+    <div class="card">
+      <h2>⏳ In attesa...</h2>
+      <p class="subtitle">L'organizzatore sta preparando la partita</p>
+      <div id="lobby-my-info" class="my-info-box"></div>
+      <h3>Giocatori connessi</h3>
+      <div id="lobby-players-view" class="list-container"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Fase nascondimento (per tutti)
+  ============================================================ -->
+  <div id="screen-hiding" class="screen">
+    <div class="phase-header hiding-header">
+      <h2>🙈 Nascondetevi!</h2>
+      <div class="big-timer" id="hiding-timer">10:00</div>
+      <p>Tempo rimasto per nascondersi</p>
+    </div>
+    <div class="card">
+      <p id="hiding-role-info" class="role-info"></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Fase caccia — VISTA CERCATORE
+  ============================================================ -->
+  <div id="screen-hunting-seeker" class="screen">
+    <div class="hunt-header">
+      <div class="hunt-timer" id="hunt-timer-seeker">30:00</div>
+      <div class="wake-lock-indicator" id="wake-lock-indicator-seeker"></div>
+    </div>
+    <div id="map-hunting" class="map-container map-fullscreen"></div>
+    <div class="dashboard-panel" id="dashboard-panel">
+      <div class="dashboard-header" id="dashboard-toggle">
+        <span>📋 Dashboard</span>
+        <span id="dashboard-arrow">▼</span>
+      </div>
+      <div class="dashboard-content" id="dashboard-content">
+        <div id="players-status-list" class="list-container"></div>
+      </div>
+    </div>
+    <button id="btn-capture-mode" class="btn-capture-fab">📸 Cattura</button>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Selezione target da catturare
+  ============================================================ -->
+  <div id="screen-select-target" class="screen">
+    <div class="card">
+      <h2>Chi vuoi catturare?</h2>
+      <p class="subtitle">Seleziona il giocatore, poi scatta la foto</p>
+      <div id="target-selection-list" class="list-container"></div>
+      <button id="btn-cancel-target-selection" class="btn-text">← Annulla</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Scatto foto
+  ============================================================ -->
+  <div id="screen-photo-capture" class="screen">
+    <div class="card photo-card">
+      <h2>📸 Scatta la foto a <span id="capture-target-name"></span></h2>
+      <video id="camera-preview" autoplay playsinline></video>
+      <canvas id="photo-canvas" style="display:none;"></canvas>
+      <img id="photo-preview" style="display:none;" />
+      <div id="photo-buttons">
+        <button id="btn-take-photo" class="btn-primary">Scatta</button>
+      </div>
+      <div id="photo-confirm-buttons" style="display:none;">
+        <button id="btn-retake-photo" class="btn-secondary">Rifai foto</button>
+        <button id="btn-send-photo" class="btn-primary">Invia per approvazione</button>
+      </div>
+      <button id="btn-cancel-photo" class="btn-text">← Annulla</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: In attesa di approvazione admin (animazione IA)
+  ============================================================ -->
+  <div id="screen-awaiting-approval" class="screen">
+    <div class="card center-content">
+      <div class="ai-thinking-animation">
+        <div class="ai-pulse"></div>
+        <div class="ai-pulse delay-1"></div>
+        <div class="ai-pulse delay-2"></div>
+      </div>
+      <h2>🤖 L'IA sta valutando la cattura...</h2>
+      <p class="subtitle">Attendi la conferma</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Fase caccia — VISTA NASCOSTO
+  ============================================================ -->
+  <div id="screen-hunting-hider" class="screen">
+    <div class="hunt-header">
+      <div class="hunt-timer" id="hunt-timer-hider">30:00</div>
+      <div class="wake-lock-indicator" id="wake-lock-indicator-hider"></div>
+    </div>
+    <div class="card center-content" id="hider-status-not-caught">
+      <h2>🏃 Sei ancora libero!</h2>
+      <p class="subtitle">Resta nascosto finché puoi</p>
+      <div class="my-fake-position-info" id="my-fake-position-info"></div>
+    </div>
+    <div class="card center-content" id="hider-status-caught" style="display:none;">
+      <h2>🚨 Sei stato catturato!</h2>
+      <p class="subtitle">Il tuo round è finito, ma la partita continua</p>
+    </div>
+    <div class="card">
+      <h3>Stato squadra</h3>
+      <div id="hider-team-status-list" class="list-container"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCHERMATA: Fine round
+  ============================================================ -->
+  <div id="screen-round-end" class="screen">
+    <div class="card center-content">
+      <h1 id="round-end-title"></h1>
+      <p class="subtitle" id="round-end-subtitle"></p>
+      <button id="btn-back-home-2" class="btn-primary">Torna alla home</button>
+    </div>
+  </div>
+
+  <!-- Toast notifiche (es. giocatore eliminato) -->
+  <div id="toast-container"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/geo-client.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/lobby.js"></script>
+  <script src="js/game-hiding.js"></script>
+  <script src="js/game-hunting-seeker.js"></script>
+  <script src="js/game-hunting-hider.js"></script>
+  <script src="js/photo-capture.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
