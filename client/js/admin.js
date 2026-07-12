@@ -46,7 +46,10 @@ async function unlockAdmin() {
     Router.show('screen-admin-panel');
     await loadGamesList();
   } catch (err) {
-    errorEl.textContent = 'Codice errato, riprova.';
+    // TEMPORANEO per debug: mostriamo l'errore vero invece del messaggio fisso,
+    // così si distingue un 401 reale ("Codice errato") da un fetch che non
+    // raggiunge affatto il server (es. "Failed to fetch" = URL/dominio sbagliato).
+    errorEl.textContent = `[DEBUG] ${err.message} — chiamando: ${CONFIG.SERVER_URL}`;
   }
 }
 
